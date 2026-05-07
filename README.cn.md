@@ -41,6 +41,55 @@ interceptor.start();
 // interceptor.dispose();
 ```
 
+## 共享缓存写入追踪器
+
+通过在 MSW 拦截器和应用内其他使用 `@isdk/proxy` 的 `fetchWithCache` 的拦截器之间共享 `activeCacheWrites` Map，您可以实现应用范围内的请求合并。
+
+**注意**：避免创建多个 `MswCacheInterceptor` 实例，因为它们会多次注入 fetch 和 node HTTP 模块。正确的做法是在应用内其他使用底层 `fetchWithCache` 的拦截器间共享追踪器。
+
+```typescript
+import { createMswCacheInterceptor } from '@isdk/proxy-msw';
+import { createFetchWithCache } from '@isdk/proxy';
+
+// 创建一个共享的缓存写入追踪器
+const sharedCacheWrites = new Map();
+
+// MSW 拦截器
+const mswInterceptor = await createMswCacheInterceptor({
+  storagePath: './.cache',
+  default: { staleIfError: true },
+  activeCacheWrites: sharedCacheWrites
+});
+mswInterceptor.start();
+
+// 应用内其他使用 fetchWithCache 的拦截器
+const fetchWithCache = createFetchWithCache(sharedCacheWrites);
+// 现在两个拦截器共享同一个追踪器，实现应用范围内的请求合并
+```
+
+## API 参考
+
+### `createMswCacheInterceptor(config)`
+
+创建一个基于 MSW 的智能缓存拦截器。
+
+#### 参数
+
+- `config` (`ProxyConfig & { activeCacheWrites?: Map<string, Promise<void>> }`): 配置对象。
+  - `storagePath` (`string`, 可选): 缓存存储目录路径。默认为系统临时目录。
+  - `default` (`object`, 可选): 应用于所有站点的默认缓存规则。
+  - `sites` (`object`, 可选): 针对特定域名的缓存规则。
+  - `activeCacheWrites` (`Map<string, Promise<void>>`, 可选): 并发追踪器 Map，用于追踪正在进行的缓存写入操作。如果不提供，将自动创建一个新的内部 Map。在多个拦截器间共享同一个 Map 可以实现应用范围内的请求合并。
+
+#### 返回值
+
+返回一个 Promise，解析为包含以下属性的对象：
+
+- `start(): void` - 启动拦截器，开始监听请求。
+- `dispose(): void` - 销毁拦截器并停止工作。释放所有资源。
+- `cache` (`SmartCache`) - 底层 `SmartCache` 实例，可用于手动管理缓存。
+- `activeCacheWrites` (`Map<string, Promise<void>>`) - 当前使用的并发追踪器 Map。可传递给其他拦截器以实现请求合并。
+
 ## 工作原理
 
 此适配器封装了 `@isdk/proxy` 的核心 `fetchWithCache` 函数。当 MSW 拦截到请求时：

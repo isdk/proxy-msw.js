@@ -40,6 +40,55 @@ interceptor.start();
 // interceptor.dispose();
 ```
 
+## Shared Cache Writes Tracker
+
+By sharing the `activeCacheWrites` Map between the MSW interceptor and other interceptors using `fetchWithCache` from `@isdk/proxy`, you can achieve application-wide request deduplication.
+
+**Note**: Avoid creating multiple `MswCacheInterceptor` instances as they will inject into fetch and node HTTP modules multiple times. Instead, share the tracker with other interceptors in your application that use the underlying `fetchWithCache`.
+
+```typescript
+import { createMswCacheInterceptor } from '@isdk/proxy-msw';
+import { createFetchWithCache } from '@isdk/proxy';
+
+// Create a shared cache writes tracker
+const sharedCacheWrites = new Map();
+
+// MSW interceptor
+const mswInterceptor = await createMswCacheInterceptor({
+  storagePath: './.cache',
+  default: { staleIfError: true },
+  activeCacheWrites: sharedCacheWrites
+});
+mswInterceptor.start();
+
+// Other interceptors in your app using fetchWithCache
+const fetchWithCache = createFetchWithCache(sharedCacheWrites);
+// Now both interceptors share the same tracker for application-wide request deduplication
+```
+
+## API Reference
+
+### `createMswCacheInterceptor(config)`
+
+Creates an MSW-based cache interceptor with intelligent caching capabilities.
+
+#### Parameters
+
+- `config` (`ProxyConfig & { activeCacheWrites?: Map<string, Promise<void>> }`): Configuration object.
+  - `storagePath` (`string`, optional): Path to the cache storage directory. Defaults to system temp directory.
+  - `default` (`object`, optional): Default cache rules applied to all sites.
+  - `sites` (`object`, optional): Domain-specific cache rules.
+  - `activeCacheWrites` (`Map<string, Promise<void>>`, optional): Concurrent tracker Map for tracking ongoing cache write operations. If not provided, a new internal Map will be created automatically. Sharing the same Map across multiple interceptors enables application-wide request deduplication.
+
+#### Returns
+
+Returns a promise that resolves to an object with the following properties:
+
+- `start(): void` - Starts the interceptor and begins listening for requests.
+- `dispose(): void` - Destroys the interceptor and stops listening. Releases all resources.
+- `cache` (`SmartCache`) - The underlying `SmartCache` instance, which can be used for manual cache management.
+- `activeCacheWrites` (`Map<string, Promise<void>>`) - The concurrent tracker Map currently in use. Can be passed to other interceptors to enable request deduplication.
+
 ## How It Works
 
 This adapter wraps the core `fetchWithCache` from `@isdk/proxy`. When a request is intercepted by MSW:
