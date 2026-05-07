@@ -9,24 +9,33 @@ First off, thank you for considering contributing to `@isdk/proxy-msw`! This pac
 This package is part of the `@isdk/proxy` ecosystem. It relies on the core library as a peer dependency.
 
 ### Prerequisites
+
 - **Node.js**: >= 20.11.1
 - **pnpm**: Latest version recommended
 
 ### Steps
+
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/isdk/proxy.js.git
    cd proxy/proxy-msw
    ```
+
 2. **Install dependencies**:
+
    ```bash
    pnpm install
    ```
+
 3. **Run tests**:
+
    ```bash
    pnpm test
    ```
+
 4. **Build the project**:
+
    ```bash
    pnpm run build
    ```
@@ -36,6 +45,7 @@ This package is part of the `@isdk/proxy` ecosystem. It relies on the core libra
 ## 🏗 Architecture Overview
 
 The adapter is intentionally lightweight. Its main responsibilities are:
+
 - **Interception**: Using `@mswjs/interceptors` to hook into Node.js/Browser network requests.
 - **Orchestration**: Passing intercepted requests to `@isdk/proxy`'s `fetchWithCache` function.
 - **Bypassing**: Implementing the `fetchBypass` mechanism to ensure that the actual network fetch doesn't get caught in an infinite interception loop.
