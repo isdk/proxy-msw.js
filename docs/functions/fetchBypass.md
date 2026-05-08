@@ -8,7 +8,7 @@
 
 > **fetchBypass**(`input`, `init?`): `Promise`\<`Response`\>
 
-Defined in: [fetchBypass.ts:14](https://github.com/isdk/proxy-msw.js/blob/c56f9eb30ef465cc888c2c09d0daa4ebdeb225dc/src/fetchBypass.ts#L14)
+Defined in: [fetchBypass.ts:14](https://github.com/isdk/proxy-msw.js/blob/2f93404bf20166a1d90aaddc5d8c56ec94f30878/src/fetchBypass.ts#L14)
 
 逃逸请求函数：确保请求不会被拦截器再次捕获。
 
