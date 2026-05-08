@@ -8,7 +8,7 @@
 
 > **createMswCacheInterceptor**(`config`): `Promise`\<\{ `activeCacheWrites`: `Map`\<`string`, `Promise`\<`void`\>\>; `cache`: `SmartCache`; `dispose`: () => `void`; `start`: () => `void`; \}\>
 
-Defined in: [createMswCacheInterceptor.ts:58](https://github.com/isdk/proxy-msw.js/blob/2f93404bf20166a1d90aaddc5d8c56ec94f30878/src/createMswCacheInterceptor.ts#L58)
+Defined in: [createMswCacheInterceptor.ts:58](https://github.com/isdk/proxy-msw.js/blob/1f9bd51e625693eae73f2eb8f7876a01d8490d34/src/createMswCacheInterceptor.ts#L58)
 
 基于 MSW (Mock Service Worker) Interceptors 的智能缓存拦截器。
 
