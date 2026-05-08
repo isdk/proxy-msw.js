@@ -5,6 +5,11 @@ import { FetchInterceptor } from '@mswjs/interceptors/fetch';
 import { createFetchWithCache, ProxyConfig, SmartCache } from '@isdk/proxy';
 import { fetchBypass } from './fetchBypass';
 
+// 全局后备的 activeCacheWrites。
+// 当用户未显式提供并发追踪器时使用，确保在不传入特定 map 的情况下，
+// 单次执行环境内的默认合并策略能正常工作。
+const defaultActiveCacheWrites = new Map<string, Promise<void>>();
+
 /**
  * 基于 MSW (Mock Service Worker) Interceptors 的智能缓存拦截器。
  *
@@ -50,12 +55,6 @@ import { fetchBypass } from './fetchBypass';
  * // 现在即使是从底层直接发起，还是通过全局 fetch 拦截，都会共享合并状态。
  * ```
  */
-
-// 全局后备的 activeCacheWrites。
-// 当用户未显式提供并发追踪器时使用，确保在不传入特定 map 的情况下，
-// 单次执行环境内的默认合并策略能正常工作。
-const defaultActiveCacheWrites = new Map<string, Promise<void>>();
-
 export const createMswCacheInterceptor = async (config: ProxyConfig & { activeCacheWrites?: Map<string, Promise<void>> }) => {
   const activeCacheWrites = config.activeCacheWrites || defaultActiveCacheWrites;
   const fetchWithCache = createFetchWithCache(activeCacheWrites);
