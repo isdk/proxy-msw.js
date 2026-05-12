@@ -18,9 +18,10 @@ const fetchBypass = _fetchBypass as unknown as MockedFunction<typeof _fetchBypas
 describe('createMswCacheInterceptor', () => {
   const storagePath = path.join(os.tmpdir(), `isdk-proxy-msw-test-${Date.now()}`);
 
+  // ProxyConfig 继承自 ProxyCacheRule，直接在顶层设置默认配置
   const config: ProxyConfig = {
     storagePath,
-    default: { staleIfError: true },
+    staleIfError: true,
     sites: {
       'example.com': { staleIfError: true }
     }

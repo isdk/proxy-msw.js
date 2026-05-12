@@ -2,7 +2,7 @@ import { BatchInterceptor } from '@mswjs/interceptors';
 import { ClientRequestInterceptor } from '@mswjs/interceptors/ClientRequest';
 import { XMLHttpRequestInterceptor } from '@mswjs/interceptors/XMLHttpRequest';
 import { FetchInterceptor } from '@mswjs/interceptors/fetch';
-import { createFetchWithCache, ProxyConfig, SmartCache } from '@isdk/proxy';
+import { createFetchWithCache, ProxyConfig, SmartCache, getSiteConfig } from '@isdk/proxy';
 import { fetchBypass } from './fetchBypass';
 
 // 全局后备的 activeCacheWrites。
@@ -83,8 +83,8 @@ export const createMswCacheInterceptor = async (config: ProxyConfig & { activeCa
 
   interceptor.on('request', async (context) => {
     const { request, controller } = context;
-    const url = new URL(request.url);
-    const siteConfig = config.sites[url.hostname] || config.default;
+    // 使用 getSiteConfig 获取匹配的站点配置，未匹配时返回 ProxyConfig 自身作为默认值
+    const siteConfig = getSiteConfig(request.url, config);
 
     try {
       const response = await fetchWithCache(request, fetchBypass, {

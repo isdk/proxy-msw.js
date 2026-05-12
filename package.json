@@ -39,7 +39,7 @@
     "@mswjs/interceptors": "^0.41.8"
   },
   "peerDependencies": {
-    "@isdk/proxy": "*"
+    "@isdk/proxy": ">=0.2"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^6.7.3",

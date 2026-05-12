@@ -9,7 +9,7 @@ This package provides an interceptor that seamlessly integrates the high-perform
 - **🔌 Seamless MSW Integration**: Use `@mswjs/interceptors` to capture network requests globally.
 - **⚡ Performance Powered by @isdk/proxy**: Benefit from L1/L2 hybrid caching, Metadata residency, and SWR.
 - **🛡️ Conflict-Free**: Built-in `fetchBypass` mechanism to avoid infinite interception loops.
-- **🛠️ Flexible Configuration**: Domain-specific cache rules for headers, cookies, and query parameters.
+- **🛠️ Flexible Configuration**: Domain-specific cache rules for headers, cookies, query parameters, and body.
 
 ## Installation
 
@@ -24,11 +24,11 @@ import { createMswCacheInterceptor } from '@isdk/proxy-msw';
 
 const interceptor = await createMswCacheInterceptor({
   storagePath: './.cache', // Optional: defaults to system temp dir
-  default: { staleIfError: true },
+  staleIfError: true, // Default rule for all sites
   sites: {
     'api.github.com': {
-      query: { include: ['q'] },
-      headers: { exclude: ['authorization'] }
+      query: { q: true },      // Include 'q' param in cache key
+      headers: { authorization: false }  // Exclude from cache key
     }
   }
 });
@@ -56,7 +56,7 @@ const sharedCacheWrites = new Map();
 // MSW interceptor
 const mswInterceptor = await createMswCacheInterceptor({
   storagePath: './.cache',
-  default: { staleIfError: true },
+  staleIfError: true,
   activeCacheWrites: sharedCacheWrites
 });
 mswInterceptor.start();
@@ -64,6 +64,22 @@ mswInterceptor.start();
 // Other interceptors in your app using fetchWithCache
 const fetchWithCache = createFetchWithCache(sharedCacheWrites);
 // Now both interceptors share the same tracker for application-wide request deduplication
+```
+
+## Cache Status Header
+
+All `Response` objects handled by `@isdk/proxy` include an `X-Proxy-Cache` header for observability:
+
+| Value | Description |
+|-------|-------------|
+| `HIT` | Perfect cache hit, data served from L1 memory or L2 disk cache. |
+| `MISS` | Cache miss (or bypassed), data fetched from origin. |
+| `STALE` | Stale cache hit, stale data returned while background update runs. |
+| `STALE_IF_ERROR` | Origin failed (network error or 5xx), stale cache returned as fallback. |
+
+```typescript
+const response = await fetch('https://api.github.com/users');
+console.log(response.headers.get('X-Proxy-Cache')); // 'HIT' if cached
 ```
 
 ## API Reference
@@ -75,9 +91,7 @@ Creates an MSW-based cache interceptor with intelligent caching capabilities.
 #### Parameters
 
 - `config` (`ProxyConfig & { activeCacheWrites?: Map<string, Promise<void>> }`): Configuration object.
-  - `storagePath` (`string`, optional): Path to the cache storage directory. Defaults to system temp directory.
-  - `default` (`object`, optional): Default cache rules applied to all sites.
-  - `sites` (`object`, optional): Domain-specific cache rules.
+  - For `ProxyConfig` and `ProxyCacheRule` types, see [@isdk/proxy](https://github.com/isdk/proxy.js) documentation.
   - `activeCacheWrites` (`Map<string, Promise<void>>`, optional): Concurrent tracker Map for tracking ongoing cache write operations. If not provided, a new internal Map will be created automatically. Sharing the same Map across multiple interceptors enables application-wide request deduplication.
 
 #### Returns
